@@ -963,3 +963,23 @@ function pmprommpu_pmpro_require_billing( $require_billing, $level ) {
 	return $require_billing;
 }
 add_filter( 'pmpro_require_billing', 'pmprommpu_pmpro_require_billing', 10, 2);
+
+function pmprommpu_restrict_multiple_subscription_checkout( $pmpro_continue_registration ) {
+	global $gateway, $pmpro_msg, $pmpro_msgt, $pmpro_checkout_levels;
+	if ( ! $pmpro_continue_registration || pmprommpu_gateway_supports_multiple_subscription_checkout( $gateway ) ) {
+		return $pmpro_continue_registration;
+	}
+	$found_subscription_level = false;
+	foreach ( $pmpro_checkout_levels as $pmpro_checkout_level ) {
+		if ( ! empty( intval( $pmpro_checkout_level->billing_amount ) ) ) {
+			if ( $found_subscription_level ) {
+				$pmpro_msg  = __( "Error: You cannot check out for multiple levels with subscription payments in a single order. Please check out for subscription levels individually.", 'pmpro-multiple-memberships-per-user' );
+				$pmpro_msgt = 'pmpro_error';
+				return false;
+			}
+			$found_subscription_level = true;
+		}
+	}
+	return true;
+}
+add_filter( 'pmpro_registration_checks', 'pmprommpu_restrict_multiple_subscription_checkout', 10, 1 );
