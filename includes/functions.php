@@ -425,3 +425,18 @@ function pmprommpu_addMembershipLevel($inlevel = NULL, $user_id = NULL, $force_a
 	// OK, we're legal (or don't care). Let's add it. Set elsewhere by filter, changeMembershipLevel should not disable old levels.
 	return pmpro_changeMembershipLevel($levelid, $user_id);
 }
+
+/**
+ * Returns whether a user can purchase multiple subscription memberships with a single
+ * PMPro checkout using the given gateway.
+ *
+ * @param  null|string $gateway to check.
+ * @return boolean
+ */
+function pmprommpu_gateway_supports_multiple_subscription_checkout( $gateway = null ) {
+	if ( empty( $gateway ) ) {
+		$gateway = pmpro_getOption( 'gateway' );
+	}
+	$gateways_not_supported = array( 'paypalexpress', 'paypalstandard' );
+	return ! in_array( $gateway, $gateways_not_supported, true );
+}

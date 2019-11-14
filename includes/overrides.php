@@ -561,15 +561,13 @@ function pmprommpu_pmpro_membership_levels_table( $intablehtml, $inlevelarr ) {
 	}
 
 	// Check if gateway is supported
-	if ( $gateway == "paypalexpress" || $gateway == "paypalstandard" ) { // doing this manually for now; should do it via a setting in the gateway class.
+	if ( ! pmprommpu_gateway_supports_multiple_subscription_checkout( $gateway ) ) {
+		// TODO: Add a link to documentation page explaining this limitation.
 		?>
 		<div id="message" class="error">
-			<p><?php echo __( "Multiple Memberships Per User (MMPU) does not work with PayPal Express or PayPal Standard. Please disable the MMPU plug-in or change gateways to continue.", "mmpu" ); ?></p>
+			<p><?php echo __( '<strong>PMPro Multiple Memberships per User:</strong> This site\'s current payment gateway does not allow users to register for multiple memberships during a single checkout.', 'pmpro-multiple-memberships-per-user' ); ?></p>
 		</div>
 		<?php
-		$rethtml = ob_get_clean();
-
-		return $rethtml;
 	}
 
 	?>
