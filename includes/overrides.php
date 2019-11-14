@@ -155,10 +155,11 @@ function pmprommpu_frontend_scripts() {
 		$incoming_levels  = pmpro_getMembershipLevelsForUser();
 		$available_levels = pmpro_getAllLevels( false, true );
 
-		$selected_levels = array();
-		$level_elements  = array();
-		$current_levels  = array();
-		$all_levels      = array();
+		$selected_levels                = array();
+		$level_elements                 = array();
+		$current_levels                 = array();
+		$all_levels                     = array();
+		$restricted_subscription_levels = array();
 
 		if ( false !== $incoming_levels ) { // At this point, we're not disabling others in the group for initial selections, because if they're here, they probably want to change them.
 
@@ -171,9 +172,12 @@ function pmprommpu_frontend_scripts() {
 		}
 
 		if ( false !== $available_levels ) {
-
+			$limit_subscription_levels = ! pmprommpu_gateway_supports_multiple_subscription_checkout();
 			foreach ( $available_levels as $lvl ) {
 				$all_levels[ $lvl->id ] = $lvl->name;
+				if ( ! empty( $lvl->billing_amount ) && $limit_subscription_levels ) {
+					$restricted_subscription_levels[] = $lvl->id;
+				}
 			}
 		}
 
@@ -186,13 +190,14 @@ function pmprommpu_frontend_scripts() {
 					'cancel_lnk' => esc_url_raw( pmpro_url( 'cancel', '') ),
 					'checkout_lnk' => esc_url_raw( pmpro_url( 'checkout', '' ) ),
 				),
-				'lang'           => array(
+				'lang'            => array(
 					'selected_label' => __( 'Selected', 'mmpu' ),
 				),
-				'alllevels'   => $all_levels,
-				'selectedlevels' => $selected_levels,
-				'levelelements'  => $level_elements,
-				'currentlevels'  => $current_levels,
+				'alllevels'                    => $all_levels,
+				'selectedlevels'               => $selected_levels,
+				'levelelements'                => $level_elements,
+				'currentlevels'                => $current_levels,
+				'restrictedsubscriptionlevels' => $restricted_subscription_levels,
 			)
 		);
 		wp_enqueue_script( 'pmprommpu-levels');

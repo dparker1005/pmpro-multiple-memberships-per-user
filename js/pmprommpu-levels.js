@@ -26,6 +26,7 @@ jQuery(document).ready( function() {
     var currentlevels = pmprolvl.currentlevels;
     var level_elements = pmprolvl.levelelements;
     var alllevels = pmprolvl.alllevels;
+    var restrictedsubscriptionlevels = pmprolvl.restrictedsubscriptionlevels;
 
     for ( var i = 0, len = selectedlevels.length ; i < len ; i++ ) {
 
@@ -175,6 +176,9 @@ jQuery(document).ready( function() {
                 message += "<p class='mmpu_addedlevels'><label for='mmpu_addedlevels'>Added Levels</label>";
                 message += joinObjectProps(", ", addedlevels);
                 message += "</p>";
+                if ( multipleRestrictedSubscriptionLevels( addedlevels ) ) {
+                  message += "<p class='pmpro_error'>You may only check out for one subscription level at a time.</p>"
+                }
                 cancheckout = true;
             } else {
                 message += "<p class='mmpu_addedlevels'><label for='mmpu_addedlevels'>Added Levels</label>None.</p>";
@@ -190,6 +194,10 @@ jQuery(document).ready( function() {
 
         }
         jQuery("#pmpro_mmpu_level_summary").html(message);
+
+        if ( multipleRestrictedSubscriptionLevels( addedlevels ) ) {
+          cancheckout = false;
+        }
         if (true === cancheckout) {
             jQuery('.pmpro_mmpu_checkout-button').prop('disabled', false);
         } else {
@@ -237,6 +245,15 @@ jQuery(document).ready( function() {
             }
         }
         return result;
+    }
+    function multipleRestrictedSubscriptionLevels(addedlevels) {
+      var count = 0;
+      for (var level in addedlevels) {
+          if (restrictedsubscriptionlevels.includes(level)) {
+              count++;
+          }
+      }
+      return count > 1;
     }
 });
 
