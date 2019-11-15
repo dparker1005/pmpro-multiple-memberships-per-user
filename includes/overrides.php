@@ -30,7 +30,14 @@ function pmprommpu_init_checkout_levels() {
 		$_REQUEST['level'] = str_replace( array( ' ', '%20' ), '+', $_REQUEST['level'] );
 
 		//get the ids
-		$pmpro_checkout_level_ids = array_map( 'intval', explode( "+", preg_replace( "[^0-9\+]", "", $_REQUEST['level'] ) ) );
+		if ( isset( $_SESSION['pmprommpu_checkout_level_ids'] ) ) {
+			// Returning from off-site checkout
+			$pmpro_checkout_level_ids = $_SESSION['pmprommpu_checkout_level_ids'];
+			unset( $_SESSION['pmprommpu_checkout_level_ids'] );
+		} else {
+			$pmpro_checkout_level_ids = array_map( 'intval', explode( "+", preg_replace( "[^0-9\+]", "", $_REQUEST['level'] ) ) );
+		}
+
 
 		// Used to place paid levels before free levels.
 		$ordered_pmpro_checkout_level_ids = array();
@@ -998,3 +1005,11 @@ function pmprommpu_restrict_multiple_paid_level_checkout( $pmpro_continue_regist
 	return true;
 }
 add_filter( 'pmpro_registration_checks', 'pmprommpu_restrict_multiple_paid_level_checkout', 10, 1 );
+
+function pmprommpu_paypalexpress_session_vars() {
+	global $pmpro_checkout_level_ids;
+	if ( isset( $pmpro_checkout_level_ids ) ) {
+		$_SESSION['pmprommpu_checkout_level_ids'] = $pmpro_checkout_level_ids;
+	}
+}
+add_action( 'pmpro_paypalexpress_session_vars', 'pmprommpu_paypalexpress_session_vars' );
