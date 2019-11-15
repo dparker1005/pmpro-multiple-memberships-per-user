@@ -155,11 +155,11 @@ function pmprommpu_frontend_scripts() {
 		$incoming_levels  = pmpro_getMembershipLevelsForUser();
 		$available_levels = pmpro_getAllLevels( false, true );
 
-		$selected_levels                = array();
-		$level_elements                 = array();
-		$current_levels                 = array();
-		$all_levels                     = array();
-		$restricted_subscription_levels = array();
+		$selected_levels        = array();
+		$level_elements         = array();
+		$current_levels         = array();
+		$all_levels             = array();
+		$restricted_paid_levels = array();
 
 		if ( false !== $incoming_levels ) { // At this point, we're not disabling others in the group for initial selections, because if they're here, they probably want to change them.
 
@@ -172,11 +172,11 @@ function pmprommpu_frontend_scripts() {
 		}
 
 		if ( false !== $available_levels ) {
-			$limit_subscription_levels = ! pmprommpu_gateway_supports_multiple_subscription_checkout();
+			$limit_paid_levels = ! pmprommpu_gateway_allows_multiple_paid_levels_at_checkout();
 			foreach ( $available_levels as $lvl ) {
 				$all_levels[ $lvl->id ] = $lvl->name;
-				if ( ! empty( $lvl->billing_amount ) && $limit_subscription_levels ) {
-					$restricted_subscription_levels[] = $lvl->id;
+				if ( $limit_paid_levels && ! pmpro_isLevelFree( $lvl ) ) {
+					$restricted_paid_levels[] = $lvl->id;
 				}
 			}
 		}
@@ -193,11 +193,11 @@ function pmprommpu_frontend_scripts() {
 				'lang'            => array(
 					'selected_label' => __( 'Selected', 'mmpu' ),
 				),
-				'alllevels'                    => $all_levels,
-				'selectedlevels'               => $selected_levels,
-				'levelelements'                => $level_elements,
-				'currentlevels'                => $current_levels,
-				'restrictedsubscriptionlevels' => $restricted_subscription_levels,
+				'alllevels'            => $all_levels,
+				'selectedlevels'       => $selected_levels,
+				'levelelements'        => $level_elements,
+				'currentlevels'        => $current_levels,
+				'restrictedpaidlevels' => $restricted_paid_levels,
 			)
 		);
 		wp_enqueue_script( 'pmprommpu-levels');
@@ -566,11 +566,11 @@ function pmprommpu_pmpro_membership_levels_table( $intablehtml, $inlevelarr ) {
 	}
 
 	// Check if gateway is supported
-	if ( ! pmprommpu_gateway_supports_multiple_subscription_checkout( $gateway ) ) {
+	if ( ! pmprommpu_gateway_allows_multiple_paid_levels_at_checkout( $gateway ) ) {
 		// TODO: Add a link to documentation page explaining this limitation.
 		?>
 		<div id="message" class="error">
-			<p><?php echo __( '<strong>PMPro Multiple Memberships per User:</strong> This site\'s current payment gateway does not allow users to register for multiple memberships during a single checkout.', 'pmpro-multiple-memberships-per-user' ); ?></p>
+			<p><?php echo __( '<strong>PMPro Multiple Memberships per User:</strong> This site\'s current payment gateway does not allow users to register for multiple paid levels during a single checkout.', 'pmpro-multiple-memberships-per-user' ); ?></p>
 		</div>
 		<?php
 	}
@@ -964,22 +964,22 @@ function pmprommpu_pmpro_require_billing( $require_billing, $level ) {
 }
 add_filter( 'pmpro_require_billing', 'pmprommpu_pmpro_require_billing', 10, 2);
 
-function pmprommpu_restrict_multiple_subscription_checkout( $pmpro_continue_registration ) {
+function pmprommpu_restrict_multiple_paid_level_checkout( $pmpro_continue_registration ) {
 	global $gateway, $pmpro_msg, $pmpro_msgt, $pmpro_checkout_levels;
-	if ( ! $pmpro_continue_registration || pmprommpu_gateway_supports_multiple_subscription_checkout( $gateway ) ) {
+	if ( ! $pmpro_continue_registration || pmprommpu_gateway_allows_multiple_paid_levels_at_checkout( $gateway ) ) {
 		return $pmpro_continue_registration;
 	}
-	$found_subscription_level = false;
+	$found_paid_level = false;
 	foreach ( $pmpro_checkout_levels as $pmpro_checkout_level ) {
 		if ( ! empty( intval( $pmpro_checkout_level->billing_amount ) ) ) {
-			if ( $found_subscription_level ) {
-				$pmpro_msg  = __( "Error: You cannot check out for multiple levels with subscription payments in a single order. Please check out for subscription levels individually.", 'pmpro-multiple-memberships-per-user' );
+			if ( $found_paid_level ) {
+				$pmpro_msg  = __( "Error: You cannot check out for multiple paid memberships during a single checkout. Please check out for paid memberships individually.", 'pmpro-multiple-memberships-per-user' );
 				$pmpro_msgt = 'pmpro_error';
 				return false;
 			}
-			$found_subscription_level = true;
+			$found_paid_level = true;
 		}
 	}
 	return true;
 }
-add_filter( 'pmpro_registration_checks', 'pmprommpu_restrict_multiple_subscription_checkout', 10, 1 );
+add_filter( 'pmpro_registration_checks', 'pmprommpu_restrict_multiple_paid_level_checkout', 10, 1 );

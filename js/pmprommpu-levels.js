@@ -26,7 +26,7 @@ jQuery(document).ready( function() {
     var currentlevels = pmprolvl.currentlevels;
     var level_elements = pmprolvl.levelelements;
     var alllevels = pmprolvl.alllevels;
-    var restrictedsubscriptionlevels = pmprolvl.restrictedsubscriptionlevels;
+    var restrictedpaidlevels = pmprolvl.restrictedpaidlevels;
 
     for ( var i = 0, len = selectedlevels.length ; i < len ; i++ ) {
 
@@ -176,8 +176,8 @@ jQuery(document).ready( function() {
                 message += "<p class='mmpu_addedlevels'><label for='mmpu_addedlevels'>Added Levels</label>";
                 message += joinObjectProps(", ", addedlevels);
                 message += "</p>";
-                if ( multipleRestrictedSubscriptionLevels( addedlevels ) ) {
-                  message += "<p class='pmpro_error'>You may only check out for one subscription level at a time.</p>"
+                if ( multipleRestrictedPaidLevels( addedlevels ) ) {
+                  message += "<p class='pmpro_error'>You may only check out for one paid membership at a time.</p>"
                 }
                 cancheckout = true;
             } else {
@@ -195,7 +195,7 @@ jQuery(document).ready( function() {
         }
         jQuery("#pmpro_mmpu_level_summary").html(message);
 
-        if ( multipleRestrictedSubscriptionLevels( addedlevels ) ) {
+        if ( multipleRestrictedPaidLevels( addedlevels ) ) {
           cancheckout = false;
         }
         if (true === cancheckout) {
@@ -246,10 +246,10 @@ jQuery(document).ready( function() {
         }
         return result;
     }
-    function multipleRestrictedSubscriptionLevels(addedlevels) {
+    function multipleRestrictedPaidLevels(addedlevels) {
       var count = 0;
       for (var level in addedlevels) {
-          if (restrictedsubscriptionlevels.includes(level)) {
+          if (restrictedpaidlevels.includes(level)) {
               count++;
           }
       }

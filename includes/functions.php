@@ -427,16 +427,16 @@ function pmprommpu_addMembershipLevel($inlevel = NULL, $user_id = NULL, $force_a
 }
 
 /**
- * Returns whether a user can purchase multiple subscription memberships with a single
+ * Returns whether a user can purchase multiple piad memberships with a single
  * PMPro checkout using the given gateway.
  *
  * @param  null|string $gateway to check.
  * @return boolean
  */
-function pmprommpu_gateway_supports_multiple_subscription_checkout( $gateway = null ) {
+function pmprommpu_gateway_allows_multiple_paid_levels_at_checkout( $gateway = null ) {
 	if ( empty( $gateway ) ) {
 		$gateway = pmpro_getOption( 'gateway' );
 	}
-	$gateways_not_supported = array( 'paypalexpress', 'paypalstandard' );
-	return ! in_array( $gateway, $gateways_not_supported, true );
+	$gateways_with_support = array( 'stripe' );
+	return in_array( $gateway, $gateways_with_support, true );
 }
