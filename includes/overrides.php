@@ -32,11 +32,25 @@ function pmprommpu_init_checkout_levels() {
 		//get the ids
 		$pmpro_checkout_level_ids = array_map( 'intval', explode( "+", preg_replace( "[^0-9\+]", "", $_REQUEST['level'] ) ) );
 
+		// Used to place paid levels before free levels.
+		$ordered_pmpro_checkout_level_ids = array();
+
 		//setup pmpro_checkout_levels global
 		$pmpro_checkout_levels = array();
 		foreach ( $pmpro_checkout_level_ids as $level_id ) {
-			$pmpro_checkout_levels[] = pmpro_getLevelAtCheckout( $level_id );
+			$level = pmpro_getLevelAtCheckout( $level_id );
+			if ( pmpro_isLevelFree( $level ) ) {
+				$ordered_pmpro_checkout_level_ids[] = $level_id;
+				$pmpro_checkout_levels[]            = $level;
+			} else {
+				// Move level to be charged first if it is free.
+				array_unshift( $ordered_pmpro_checkout_level_ids, $level_id );
+				array_unshift( $pmpro_checkout_levels, $level );
+			}
 		}
+
+		// Set $pmpro_checkout_level_ids to ordered version
+		$pmpro_checkout_level_ids = $ordered_pmpro_checkout_level_ids;
 
 		//update default request vars to only point to one (main) level
 		$_REQUEST['level'] = $pmpro_checkout_level_ids[0];
@@ -965,7 +979,7 @@ function pmprommpu_pmpro_require_billing( $require_billing, $level ) {
 add_filter( 'pmpro_require_billing', 'pmprommpu_pmpro_require_billing', 10, 2);
 
 function pmprommpu_restrict_multiple_paid_level_checkout( $pmpro_continue_registration ) {
-	global $gateway, $pmpro_msg, $pmpro_msgt, $pmpro_checkout_levels;
+	global $gateway, $pmpro_msg, $pmpro_msgt, $pmpro_checkout_levels, $level;
 	if ( ! $pmpro_continue_registration || pmprommpu_gateway_allows_multiple_paid_levels_at_checkout( $gateway ) ) {
 		return $pmpro_continue_registration;
 	}
@@ -978,6 +992,7 @@ function pmprommpu_restrict_multiple_paid_level_checkout( $pmpro_continue_regist
 				return false;
 			}
 			$found_paid_level = true;
+			$level = $pmpro_checkout_level; // To make sure that this is processed first
 		}
 	}
 	return true;

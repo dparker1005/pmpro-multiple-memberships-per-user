@@ -37,9 +37,15 @@
 	} else {
 		$pmpro_checkout_gateway_class = 'pmpro_checkout_gateway-' . $default_gateway;
 	}
+
+	if ( is_array( $pmpro_checkout_level_ids) ) {
+		$checkout_levels = implode( ',', $pmpro_checkout_level_ids);
+	} else {
+		$checkout_levels = $pmpro_checkout_level_ids;
+	}
 ?>
 <div id="pmpro_level-mmpu" class="<?php echo $pmpro_checkout_gateway_class; ?>">
-<form id="pmpro_form" class="pmpro_form" action="<?php if(!empty($_REQUEST['review'])) echo pmpro_url("checkout", "?level=" . $pmpro_checkout_level_ids); ?>" method="post">
+<form id="pmpro_form" class="pmpro_form" action="<?php if(!empty($_REQUEST['review'])) echo pmpro_url("checkout", "?level=" . $checkout_levels); ?>" method="post">
 	<input type="hidden" id="level" name="level" value="<?php echo implode('+', $pmpro_checkout_level_ids); ?>" />
 	<input type="hidden" id="levelstodel" name="levelstodel" value="<?php echo ( isset($_REQUEST['dellevels']) ? esc_attr( $_REQUEST['dellevels'] ) : null); ?>" />
 	<input type="hidden" id="checkjavascript" name="checkjavascript" value="1" />
@@ -115,12 +121,6 @@
 
 	<?php
 		do_action('pmpro_checkout_after_pricing_fields');
-
-	if ( is_array( $pmpro_checkout_level_ids) ) {
-		$checkout_levels = implode( ',', $pmpro_checkout_level_ids);
-	} else {
-		$checkout_levels = $pmpro_checkout_level_ids;
-	}
 	?>
 
 	<?php if( ! $skip_account_fields && ! $pmpro_review ) { ?>
