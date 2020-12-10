@@ -31,6 +31,10 @@ global $current_user;
 	if(!current_user_can($membership_level_capability))
 		return false;
 
+	if ( ! function_exists( 'pmpro_getMembershipLevelForUser' ) ) {
+		return false;
+	}
+
 	global $wpdb;
 	/*$user->membership_level = $wpdb->get_row("SELECT l.id AS ID, l.name AS name
 														FROM {$wpdb->pmpro_membership_levels} AS l
@@ -105,7 +109,7 @@ global $current_user;
 							for($i = 1; $i < 13; $i++)
 							{
 							?>
-							<option value="<?php echo $i?>" <?php if($i == $selected_expires_month) { ?>selected="selected"<?php } ?>><?php echo date("M", strtotime($i . "/1/" . $current_year, current_time("timestamp")))?></option>
+							<option value="<?php echo $i?>" <?php if($i == $selected_expires_month) { ?>selected="selected"<?php } ?>><?php echo date("M", strtotime($i . "/15/" . $current_year, current_time("timestamp")))?></option>
 							<?php
 							}
 						?>
@@ -177,7 +181,7 @@ global $current_user;
 										for($i = 1; $i < 13; $i++)
 										{
 										?>
-										<option value="<?php echo $i?>" <?php if($i == $selected_expires_month) { ?>selected="selected"<?php } ?>><?php echo date("M", strtotime($i . "/1/" . $current_year, current_time("timestamp")))?></option>
+										<option value="<?php echo $i?>" <?php if($i == $selected_expires_month) { ?>selected="selected"<?php } ?>><?php echo date("M", strtotime($i . "/15/" . $current_year, current_time("timestamp")))?></option>
 										<?php
 										}
 									?>
@@ -293,6 +297,7 @@ global $current_user;
 		});
 	</script>
 	<?php
+	do_action("pmpro_after_membership_level_profile_fields", $user);
 	}
 }
 
@@ -443,4 +448,5 @@ function pmprommpu_membership_level_profile_fields_update() {
 			// TODO: Should flag some kind of message to alert the admin that we had to force it (and the consequences of that).
 		}
 	}
+	wp_cache_delete( 'user_' . $user_id . '_levels', 'pmpro' );
 }

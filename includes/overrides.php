@@ -122,6 +122,7 @@ function pmprommpu_addin_jquery_dialog( $pagehook ) {
 		array(
 			'jquery',
 			'jquery-ui-dialog',
+			'jquery-migrate',
 		),
 		PMPROMMPU_VER
 	);
@@ -211,8 +212,12 @@ function pmprommpu_frontend_scripts() {
 					'cancel_lnk' => esc_url_raw( pmpro_url( 'cancel', '') ),
 					'checkout_lnk' => esc_url_raw( pmpro_url( 'checkout', '' ) ),
 				),
-				'lang'            => array(
-					'selected_label' => __( 'Selected', 'mmpu' ),
+				'lang'           => array(
+					'selected_label' => __( 'Selected', 'pmpro-multiple-memberships-per-user' ),
+					'current_levels' => _x( 'Current Levels', 'title for currently selected levels', 'pmpro-multiple-memberships-per-user' ),
+					'added_levels'   => _x( 'Added Levels', 'title for added levels', 'pmpro-multiple-memberships-per-user' ),
+					'removed_levels' => _x( 'Removed Levels', 'title for removed levels', 'pmpro-multiple-memberships-per-user' ),
+					'none' => _x( 'None', 'value displayed when no levels selected', 'pmpro-multiple-memberships-per-user' ),
 				),
 				'alllevels'            => $all_levels,
 				'selectedlevels'       => $selected_levels,
@@ -230,6 +235,11 @@ add_action( 'wp_enqueue_scripts', 'pmprommpu_frontend_scripts' );
 
 // Filter the text on the checkout page that tells the user what levels they're getting
 function pmprommpu_checkout_level_text( $intext, $levelids_adding, $levelids_deleting ) {
+	// if not level set in URL param, assume default level and we don't need to filter.
+	if ( empty( $levelids_adding ) ) {
+		return $intext;
+	}
+
 	$levelarr  = pmpro_getAllLevels( true, true );
 	$outstring = '<p>' . _n( 'You have selected the following level', 'You have selected the following levels', count( $levelids_adding ), 'pmprommpu' ) . ':</p>';
 	foreach ( $levelids_adding as $curlevelid ) {
@@ -255,36 +265,36 @@ function pmprommpu_checkout_level_text( $intext, $levelids_adding, $levelids_del
 
 add_filter( 'pmprommpu_checkout_level_text', 'pmprommpu_checkout_level_text', 10, 3 );
 
-// Ensure than when a membership level is changed, it doesn't delete the old one or unsubscribe them at the gateway. 
+// Ensure than when a membership level is changed, it doesn't delete the old one or unsubscribe them at the gateway.
 // We'll handle both later in the process.
-function pmprommpu_pmpro_deactivate_old_levels( $insetting ) {
+function pmprommpu_pmpro_deactivate_old_levels( $deactivate ) {
 	global $pmpro_pages;
 
 	//don't deactivate other levels, unless we're on the cancel page and set to cancel all
-	if ( ! is_page( $pmpro_pages['cancel'] ) && ( empty( $_REQUEST['level'] ) || $_REQUEST['level'] != 'all' ) ) {
-		$insetting = false;
+	if ( ! is_page( $pmpro_pages['cancel'] ) || empty( $_REQUEST['levelstocancel'] ) || $_REQUEST['levelstocancel'] != 'all' ) {
+		$deactivate = false;
 	}
 
-	return $insetting;
+	return $deactivate;
 }
 
 add_filter( 'pmpro_deactivate_old_levels', 'pmprommpu_pmpro_deactivate_old_levels', 10, 1 );
 
-function pmprommpu_pmpro_cancel_previous_subscriptions( $insetting ) {
+function pmprommpu_pmpro_cancel_previous_subscriptions( $cancel ) {
 	global $pmpro_pages;
 
 	//don't cancel other subscriptions, unless we're on the cancel page and set to cancel all
-	if ( ! is_page( $pmpro_pages['cancel'] ) && ( empty( $_REQUEST['level'] ) || $_REQUEST['level'] != 'all' ) ) {
-		$insetting = false;
+	if ( ! is_page( $pmpro_pages['cancel'] ) || empty( $_REQUEST['levelstocancel'] ) || $_REQUEST['levelstocancel'] != 'all' ) {
+		$cancel = false;
 	}
 
-	return $insetting;
+	return $cancel;
 }
 
 add_filter( 'pmpro_cancel_previous_subscriptions', 'pmprommpu_pmpro_cancel_previous_subscriptions', 10, 1 );
 
 // Called after the checkout process, we are going to do three things here:
-// First, process any extra levels that need to be charged/subbed for 
+// First, process any extra levels that need to be charged/subbed for
 // Then, any unsubscriptions that the user opted for (whose level ids are in $_REQUEST['dellevels']) will be dropped.
 // Then, any remaining conflicts will be dropped.
 function pmprommpu_pmpro_after_checkout( $user_id, $checkout_statuses ) {
@@ -450,8 +460,8 @@ function pmprommpu_pmpro_after_checkout( $user_id, $checkout_statuses ) {
 				$use_discount_code = false;
 			}
 
-			//update membership_user table.	
-			//(NOTE: we can avoid some DB calls by using the global $discount_code_id, but the core preheaders/checkout.php may have blanked it)	
+			//update membership_user table.
+			//(NOTE: we can avoid some DB calls by using the global $discount_code_id, but the core preheaders/checkout.php may have blanked it)
 			if ( ! empty( $discount_code ) && ! empty( $use_discount_code ) ) {
 				$discount_code_id = $wpdb->get_var( "SELECT id FROM $wpdb->pmpro_discount_codes WHERE code = '" . esc_sql( $discount_code ) . "' LIMIT 1" );
 			} else {
@@ -474,7 +484,7 @@ function pmprommpu_pmpro_after_checkout( $user_id, $checkout_statuses ) {
 			);
 
 			if ( pmpro_changeMembershipLevel( $custom_level, $user_id, 'changed' ) ) {
-				//we're good				
+				//we're good
 
 				//add an item to the history table, cancel old subscriptions
 				if ( ! empty( $morder ) ) {
@@ -556,9 +566,9 @@ function pmprommpu_pmpro_membership_levels_table( $intablehtml, $inlevelarr ) {
 	$allgroups     = pmprommpu_get_groups();
 	$alllevels     = pmpro_getAllLevels( true, true );
 	$gateway       = pmpro_getOption( "gateway" );
-	
+
 	ob_start();
-	
+
 	// Check for orphaned levels
 	$orphaned_level_ids = array_combine( array_keys( $alllevels ), array_keys( $alllevels ) );
 	foreach( $groupsnlevels as $group_id => $group ) {
@@ -572,7 +582,7 @@ function pmprommpu_pmpro_membership_levels_table( $intablehtml, $inlevelarr ) {
 	unset( $group_id );
 	unset( $group );
 	unset( $level_id );
-	
+
 	// We found some
 	if ( ! empty( $orphaned_level_ids ) && ! empty( $first_group_id ) ) {
 		foreach( $orphaned_level_ids as $orphaned_level_id ) {
@@ -917,10 +927,10 @@ function pmprommpu_on_del_level( $levelid ) {
 	if ( false === $wpdb->delete( $wpdb->pmpro_membership_levels_groups, array( 'level' => $levelid ) ) ) {
 	    global $pmpro_msg;
 	    global $pmpro_msgt;
-	    
+
 	    $pmpro_msg = __( "Unable to delete the level from its group", "pmpro-multiple-memberships-per-user" );
 	    $pmpro_msgt = "pmpro_error";
-	    
+
     }
 }
 
@@ -952,6 +962,52 @@ function pmprommpu_show_multiple_levels_in_memlist( $inuser ) {
 
 add_filter( 'pmpro_members_list_user', 'pmprommpu_show_multiple_levels_in_memlist', 10, 1 );
 
+/*
+ * Replaces the default "Level" and "Level ID" columns in Members List
+ * with MMPU variants.
+ *
+ * @since 0.7
+ */
+function pmprommpu_memberslist_extra_cols( $columns ) {
+	$new_columns = array();
+	foreach ( $columns as $col_key => $col_name ) {
+		if ( $col_key == 'membership' ) {
+			$new_columns['mmpu_memberships'] = 'Levels';
+		} elseif ( $col_key == 'membership_id' ) {
+			$new_columns['mmpu_membership_ids'] = 'Level IDs';
+		} else {
+			$new_columns[$col_key] = $col_name;
+		}
+	}
+	return $new_columns;
+}
+add_filter( 'pmpro_memberslist_extra_cols', 'pmprommpu_memberslist_extra_cols' );
+
+/*
+ * Fills the MMPU-genereated columns in Members List.
+ *
+ * @since 0.7
+ */
+function pmprommpu_fill_memberslist_col_member_number( $colname, $user_id ) {
+	if ( 'mmpu_memberships' === $colname ) {
+		$user_levels = pmpro_getMembershipLevelsForUser( $user_id );
+		$memlevels   = array();
+		foreach ( $user_levels as $curlevel ) {
+			$memlevels[] = $curlevel->name;
+		}
+		echo( implode( ', ', $memlevels ) );
+	}
+	if ( 'mmpu_membership_ids' === $colname ) {
+		$user_levels = pmpro_getMembershipLevelsForUser( $user_id );
+		$memlevels   = array();
+		foreach ( $user_levels as $curlevel ) {
+			$memlevels[] = $curlevel->id;
+		}
+		echo( implode( ', ', $memlevels ) );
+	}
+}
+add_filter( 'pmpro_manage_memberslist_custom_column', 'pmprommpu_fill_memberslist_col_member_number', 10, 2 );
+
 function pmprommpu_set_checkout_id( $inorder ) {
 	global $pmpro_checkout_id;
 
@@ -971,7 +1027,7 @@ add_filter( 'pmpro_checkout_order_free', 'pmprommpu_set_checkout_id', 10, 1 );
  */
 function pmprommpu_pmpro_require_billing( $require_billing, $level ) {
 	global $pmpro_checkout_levels;
-	
+
 	if ( ! empty( $pmpro_checkout_levels ) ) {
 		foreach( $pmpro_checkout_levels as $checkout_level ) {
 			if ( ! pmpro_isLevelFree( $checkout_level ) ) {
@@ -980,7 +1036,7 @@ function pmprommpu_pmpro_require_billing( $require_billing, $level ) {
 			}
 		}
 	}
-	
+
 	return $require_billing;
 }
 add_filter( 'pmpro_require_billing', 'pmprommpu_pmpro_require_billing', 10, 2);

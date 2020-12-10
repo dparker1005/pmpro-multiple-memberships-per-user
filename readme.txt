@@ -2,8 +2,8 @@
 Contributors: strangerstudios
 Tags: pmpro, paid memberships pro, members, memberships, mmpu
 Requires at least: 4.8
-Tested up to: 5.3
-Stable tag: .6.2
+Tested up to: 5.5
+Stable tag: 0.7
 
 Updates the core Paid Memberships Pro plugin to allow users to have multiple memberships at the same time.
 
@@ -23,6 +23,24 @@ our add ons over time to support MMPU and will add notices here and on our websi
 1. Activate the plugin through the 'Plugins' menu in WordPress.
 
 == Changelog ==
+= 0.7 - 2020-09-01 =
+* BUG FIX: Setting jQuery Migrate as a dependency to avoid issues with WP 5.5+.
+* BUG FIX/ENHANCEMENT: The Members List table columns now show all levels and level ids.
+
+= 0.6.5 - 2020-05-29 =
+* BUG FIX: Fixed issues with cancelling individual levels.
+* BUG FIX: Deleting the user levels cache after a user's levels are updated on the edit user page.
+* BUG FIX/ENHANCEMENT: Added the "pmpro_after_membership_level_profile_fields" hook. Core PMPro has this and other add ons and code rely on it. (Thanks, Frank Fava)
+* BUG FIX/ENHANCEMENT: Localized strings in JavaScript files and updated French translations.
+
+= 0.6.4 - 2020-05-01 =
+* BUG FIX: Fixed issue where expiration dates weren't set correctly when using PMPro WooCommerce.
+* BUG FIX: Fixed a fatal error when PMPro was not activated.
+* BUG FIX: Avoiding warnings when no level param is set on the checkout page.
+* ENHANCEMENT: Adding a 0 to the front of the version number to avoid issues with version control tags/etc.
+
+= .6.3 - 2019-11-22 =
+* BUG FIX: Fixed issue where dates could save incorrectly with WP 5.3+.
 
 = .6.2 - 2019-10-18 =
 * BUG FIX: No filter pmpro_require_billing so payment fields will show up if the first level passed into the checkout page is free. We still need an update in core PMPro check the pmpro_require_billing filter instead of just the first level when deciding to enqueue gateway JavaScript.

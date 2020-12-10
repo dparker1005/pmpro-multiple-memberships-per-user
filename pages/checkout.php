@@ -19,7 +19,7 @@
  */
 	global $gateway, $pmpro_review, $skip_account_fields, $pmpro_paypal_token, $wpdb, $current_user, $pmpro_msg, $pmpro_msgt, $pmpro_requirebilling, $pmpro_level, $pmpro_levels, $tospage, $pmpro_show_discount_code, $pmpro_error_fields;
 	global $discount_code, $username, $password, $password2, $bfirstname, $blastname, $baddress1, $baddress2, $bcity, $bstate, $bzipcode, $bcountry, $bphone, $bemail, $bconfirmemail, $CardType, $AccountNumber, $ExpirationMonth,$ExpirationYear;
-	global $pmpro_checkout_levels, $pmpro_checkout_level_ids, $pmpro_checkout_del_level_ids;
+	global $pmpro_checkout_levels, $pmpro_checkout_level_ids, $pmpro_checkout_del_level_ids;	
 
 	/**
 	 * Filter to set if PMPro uses email or text as the type for email field inputs.
@@ -38,10 +38,9 @@
 		$pmpro_checkout_gateway_class = 'pmpro_checkout_gateway-' . $default_gateway;
 	}
 
-	if ( is_array( $pmpro_checkout_level_ids) ) {
-		$checkout_levels = implode( ',', $pmpro_checkout_level_ids);
-	} else {
-		$checkout_levels = $pmpro_checkout_level_ids;
+	// Make sure we have a value for this.
+	if ( empty( $pmpro_checkout_levels ) && ! empty( $pmpro_level ) ) {
+		$pmpro_checkout_levels = array( $pmpro_level );
 	}
 ?>
 <div id="pmpro_level-mmpu" class="<?php echo $pmpro_checkout_gateway_class; ?>">
@@ -89,8 +88,15 @@
 				<?php if ( ! empty( $discount_code ) && pmpro_checkDiscountCode( $discount_code ) ) { ?>
 					<?php printf(__('<p class="pmpro_level_discount_applied">The <strong>%s</strong> code has been applied to your order.</p>', 'paid-memberships-pro'), $discount_code);?>
 				<?php } ?>
-				<?php echo wpautop(pmpro_getLevelsCost($pmpro_checkout_levels)); ?>
-				<?php echo wpautop(pmpro_getLevelsExpiration($pmpro_checkout_levels)); ?>
+				<?php 
+					if ( count( $pmpro_checkout_levels ) > 1 ) {
+						echo wpautop( pmpro_getLevelsCost( $pmpro_checkout_levels ) );
+						echo wpautop( pmpro_getLevelsExpiration( $pmpro_checkout_levels ) );
+					} else {
+						echo wpautop( pmpro_getLevelCost( $pmpro_level ) );
+						echo wpautop( pmpro_getLevelExpiration( $pmpro_level ) );
+					}
+				?>
 			</div>
 
 			<?php do_action("pmpro_checkout_after_level_cost"); ?>

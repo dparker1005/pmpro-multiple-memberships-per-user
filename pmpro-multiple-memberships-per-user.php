@@ -3,9 +3,11 @@
 Plugin Name: Paid Memberships Pro - Multiple Memberships per User
 Plugin URI: http://www.paidmembershipspro.com/pmpro-multiple-memberships-per-user/
 Description: Update PMPro to allow users to checkout for and hold multiple memberships at the same time.
-Version: .6.2
+Version: 0.7
 Author: Square Lines LLC and Stranger Studios
 Author URI: http://www.square-lines.com
+Text Domain: pmpro-multiple-memberships-per-user
+Domain Path: /languages
 */
 
 /*
@@ -46,7 +48,7 @@ Author URI: http://www.square-lines.com
 */
 
 define("PMPROMMPU_DIR", dirname(__FILE__)); // signals our presence to the mother ship, and other add-ons
-define("PMPROMMPU_VER", ".6.2"); // Version string to signal cache refresh during JS/CSS updates
+define("PMPROMMPU_VER", "0.7"); // Version string to signal cache refresh during JS/CSS updates
 
 require_once(PMPROMMPU_DIR . "/includes/upgrades.php");		// to handle upgrades and to do initial setup
 require_once(PMPROMMPU_DIR . "/includes/functions.php");	// misc helper functions
@@ -58,6 +60,16 @@ require_once(PMPROMMPU_DIR . "/includes/email.php");		// functions to amend/repl
 if(is_admin()) {
 	pmprommpu_setup_and_upgrade();
 }
+
+/**
+ * pmprommpu_load_plugin_text_domain
+ *
+ * @since 0.6.5
+ */
+function pmprommpu_load_plugin_text_domain() {
+	load_plugin_textdomain( 'pmpro-multiple-memberships-per-user', false, basename( PMPROMMPU_DIR ) . '/languages' );
+}
+add_action( 'init', 'pmprommpu_load_plugin_text_domain' );
 
 // On activation, set a wp_option and set up initial group of all current levels if there are no groups.
 function pmprommpu_activation() {
