@@ -42,6 +42,12 @@
 	if ( empty( $pmpro_checkout_levels ) && ! empty( $pmpro_level ) ) {
 		$pmpro_checkout_levels = array( $pmpro_level );
 	}
+
+	if ( is_array( $pmpro_checkout_level_ids ) ) {
+		$checkout_levels = implode( ',', $pmpro_checkout_level_ids );
+	} else {
+		$checkout_levels - $pmpro_checkout_level_ids;
+	}
 ?>
 <div id="pmpro_level-mmpu" class="<?php echo $pmpro_checkout_gateway_class; ?>">
 <form id="pmpro_form" class="pmpro_form" action="<?php if(!empty($_REQUEST['review'])) echo pmpro_url("checkout", "?level=" . $checkout_levels); ?>" method="post">

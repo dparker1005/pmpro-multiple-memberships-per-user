@@ -29,11 +29,15 @@ function pmprommpu_init_checkout_levels() {
 		//convert spaces back to +
 		$_REQUEST['level'] = str_replace( array( ' ', '%20' ), '+', $_REQUEST['level'] );
 
+		// Start session if returning from PayPal.
+		if ( isset( $_REQUEST['review'] ) && isset( $_REQUEST['token'] ) ) {
+			pmpro_start_session();
+		}
+
 		//get the ids
 		if ( isset( $_SESSION['pmprommpu_checkout_level_ids'] ) ) {
 			// Returning from off-site checkout
 			$pmpro_checkout_level_ids = $_SESSION['pmprommpu_checkout_level_ids'];
-			unset( $_SESSION['pmprommpu_checkout_level_ids'] );
 		} else {
 			$pmpro_checkout_level_ids = array_map( 'intval', explode( "+", preg_replace( "[^0-9\+]", "", $_REQUEST['level'] ) ) );
 		}
