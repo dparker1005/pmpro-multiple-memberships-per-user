@@ -50,16 +50,11 @@ Domain Path: /languages
 define("PMPROMMPU_DIR", dirname(__FILE__)); // signals our presence to the mother ship, and other add-ons
 define("PMPROMMPU_VER", "0.7"); // Version string to signal cache refresh during JS/CSS updates
 
-require_once(PMPROMMPU_DIR . "/includes/upgrades.php");		// to handle upgrades and to do initial setup
-require_once(PMPROMMPU_DIR . "/includes/functions.php");	// misc helper functions
-require_once(PMPROMMPU_DIR . "/includes/overrides.php");	// to override the default PMPro functionality, and the admin pages
-require_once(PMPROMMPU_DIR . "/includes/profile.php");		// updates to the edit user/profile page in the admin
-require_once(PMPROMMPU_DIR . "/includes/invoice.php");		// to extend the MemberOrder class for multi-order invoices
-require_once(PMPROMMPU_DIR . "/includes/email.php");		// functions to amend/replace the PMPro email functions
-
-if(is_admin()) {
-	pmprommpu_setup_and_upgrade();
-}
+require_once(PMPROMMPU_DIR . "/includes/functions.php");	  // misc helper functions
+require_once(PMPROMMPU_DIR . "/includes/overrides.php");	  // to override the default PMPro functionality, and the admin pages
+require_once(PMPROMMPU_DIR . "/includes/invoice.php");		  // to extend the MemberOrder class for multi-order invoices
+require_once(PMPROMMPU_DIR . "/includes/email.php");		  // functions to amend/replace the PMPro email functions
+require_once(PMPROMMPU_DIR . "/includes/core-functions.php"); // functions to amend/replace the PMPro email functions
 
 /**
  * pmprommpu_load_plugin_text_domain
@@ -77,6 +72,8 @@ function pmprommpu_activation() {
 		deactivate_plugins( plugin_basename( __FILE__ ) );
 		wp_die( "Paid Memberships Pro must be active in order to activate the MMPU add-on.", 'Plugin dependency check', array( 'back_link' => true ) );
 	}
+
+	pmprommpu_include_core_functions();
 
 	// No groups in the DB? Create one with all levels, to maintain backward-compatibility out of the box.
 	$curgroups = pmprommpu_get_groups();
